@@ -152,8 +152,9 @@ s6a_parse_service_selection (
   char *service_selection,
   int *length)
 {
-  DevCheck (hdr_service_selection->avp_value->os.len <= APN_MAX_LENGTH, hdr_service_selection->avp_value->os.len, APN_MAX_LENGTH, 0);
-  *length = sprintf (service_selection, "%*s", (int)hdr_service_selection->avp_value->os.len, hdr_service_selection->avp_value->os.data);
+  DevCheck (hdr_service_selection->avp_value->os.len <= APN_MAX_LENGTH &&
+  (uint8_t)hdr_service_selection->avp_value->os.data[0] < APN_MAX_LENGTH, hdr_service_selection->avp_value->os.len, APN_MAX_LENGTH, 0);
+  *length = sprintf (service_selection, "%*s", (int)hdr_service_selection->avp_value->os.data[0], hdr_service_selection->avp_value->os.data+1);
   return RETURNok;
 }
 

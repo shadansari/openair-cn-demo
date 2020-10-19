@@ -173,7 +173,7 @@ function main()
     fi
   else
     if [ ! -e /usr/local/bin/spgw ]; then
-    echo_fatal "Cannot find /usr/local/bin/mme executable, have a look at the output of build_spgw executable"
+    echo_fatal "Cannot find /usr/local/bin/spgw executable, have a look at the output of build_spgw executable"
     fi
   fi
 

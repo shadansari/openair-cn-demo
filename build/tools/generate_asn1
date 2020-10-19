@@ -26,7 +26,7 @@ mkdir -p $1
 cd $1
 shift
 
-asn1c -gen-PER -fcompound-names  $* 2>&1 | grep -v -- '->' | grep -v '^Compiled' |grep -v sample
+"$OPENAIRCN_DIR/build/bin/asn1c" -gen-PER -fcompound-names  $* 2>&1 | grep -v -- '->' | grep -v '^Compiled' |grep -v sample
 
 awk ' 
   BEGIN { 

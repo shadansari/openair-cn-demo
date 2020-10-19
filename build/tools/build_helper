@@ -98,8 +98,7 @@ get_distribution_release() {
 check_supported_distribution() {
     local distribution=$(get_distribution_release)
     case "$distribution" in
-        "ubuntu16.04") return 0 ;;
-        "ubuntu14.04") return 0 ;;
+	"ubuntu18.04") return 0 ;;
         "rhel7")       return 0 ;;
         "centos7")     return 0 ;;
     esac
@@ -140,55 +139,6 @@ clean_all_files() {
 }
 
 #-------------------------------------------------------------------------------
-# Remove Nettle installation which was done from sources (only done for Ubuntu distro)
-remove_nettle_from_source() {
-    nettle_uninstall_log=$OPENAIRCN_DIR/BUILD/LOG/nettle_uninstall_log.txt
-    echo_info "\nUn-Installing Nettle from sources. The log file for nettle un-installation is here: $nettle_uninstall_log "
-    (
-    $SUDO apt-get remove -y nettle-dev nettle-bin 
-    cd /tmp
-    echo "Downloading nettle archive"
-    $SUDO rm -rf /tmp/nettle-2.5.tar.gz* /tmp/nettle-2.5
-    wget https://ftp.gnu.org/gnu/nettle/nettle-2.5.tar.gz
-    if [ $? -ne 0 ]; then
-      wget ftp://ftp.lysator.liu.se/pub/security/lsh/nettle-2.5.tar.gz
-    fi
-    if [ ! -f nettle-2.5.tar.gz ]; then
-      echo_error "Could not download nettle source files"
-      cd -
-      return
-    fi
-    tar -xzf nettle-2.5.tar.gz
-    cd nettle-2.5/
-    ./configure --disable-openssl --enable-shared --prefix=/usr 
-    $SUDO make uninstall || true 
-    ) >& $nettle_uninstall_log
-}
-
-#-------------------------------------------------------------------------------
-# Remove Gnutls from source (only done for Ubuntu distro)
-remove_gnutls_from_source(){
-    gnutls_uninstall_log=$OPENAIRCN_DIR/BUILD/LOG/gnutls_uninstall_log.txt
-    echo_info "\nUn-Installing Gnutls. The log file for Gnutls un-installation is here: $gnutls_uninstall_log "
-    (
-    $SUDO apt-get remove -y libgnutls-dev
-    cd /tmp 
-    echo "Downloading gnutls archive"
-    $SUDO rm -rf /tmp/gnutls-3.1.23.tar.xz* /tmp/gnutls-3.1.23
-    wget http://mirrors.dotsrc.org/gcrypt/gnutls/v3.1/gnutls-3.1.23.tar.xz || \
-      wget ftp://ftp.gnutls.org/gcrypt/gnutls/v3.1/gnutls-3.1.23.tar.xz
-    if [ ! -f gnutls-3.1.23.tar.xz ]; then
-      echo_error "Could not download gnutls source files"
-      cd -
-      return
-    fi
-    tar -xJf gnutls-3.1.23.tar.xz
-    cd gnutls-3.1.23/
-    ./configure --prefix=/usr
-    $SUDO make uninstall || true
-    )>& $gnutls_uninstall_log
-}
-
 ###################################
 # Compilers
 ###################################
@@ -389,61 +339,7 @@ install_libgtpnl_from_source() {
   fi
 }
 
-#-------------------------------------------------------------------------------
-# arg1 is force (no interactive script)
-install_1.1.5_freediameter_from_source() {
-  if [ $1 -eq 0 ]; then
-    read -p "Do you want to install freeDiameter 1.1.5 ? <y/N> " prompt
-    OPTION=""
-  else
-    prompt='y'
-    OPTION="-y"
-  fi
 
-  # libpq-dev 'may' be not needed
-  $SUDO apt-get install $OPTION \
-    autoconf  \
-    automake  \
-    bison     \
-    build-essential \
-    cmake \
-    cmake-curses-gui  \
-    debhelper \
-    flex  \
-    g++ \
-    gcc \
-    gdb \
-    libgcrypt-dev \
-    libidn11-dev \
-    libmysqlclient-dev \
-    libpq-dev \
-    libsctp1 \
-    libsctp-dev \
-    libxml2-dev \
-    mercurial \
-    python-dev \
-    ssl-cert \
-    swig
-
-  if [[ $prompt =~ [yY](es)* ]]
-  then
-    cd /tmp
-    echo "Downloading 1.1.5 freeDiameter archive"
-    $SUDO rm -rf /tmp/1.1.5.tar.gz /tmp/freeDiameter-1.1.5 /tmp/freediameter
-    GIT_SSL_NO_VERIFY=true git clone https://gitlab.eurecom.fr/oai/freediameter.git -b eurecom-1.1.5
-    cd /tmp/freediameter
-    #patch -p1 < $OPENAIRCN_DIR/src/s6a/freediameter/freediameter-1.1.5.patch
-    mkdir build
-    cd build
-    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ../
-    echo "Compiling freeDiameter"
-    make -j`nproc`
-    #make test
-    $SUDO make install
-    cd /tmp
-    rm -rf /tmp/1.1.5.tar.gz /tmp/freeDiameter-1.1.5 /tmp/freediameter
-  fi
-}
 
 #-------------------------------------------------------------------------------
 # arg1 is force (no interactive script)
@@ -461,25 +357,25 @@ install_freediameter_from_source() {
       autoconf \
       automake \
       bison \
-      build-essential \
-      cmake \
-      cmake-curses-gui \
-      debhelper \
-      flex \
-      g++ \
-      gcc \
-      gdb \
-      libgcrypt-dev \
-      libgnutls-dev \
-      libidn11-dev \
-      libmysqlclient-dev \
-      libpq-dev \
-      libsctp1 \
-      libsctp-dev \
-      libxml2-dev \
-      mercurial \
-      python-dev \
-      ssl-cert \
+    build-essential \
+    cmake \
+    cmake-curses-gui  \
+    debhelper \
+    flex  \
+    g++ \
+    gcc \
+    gdb \
+    libgcrypt-dev \
+    libgnutls28-dev \
+    libidn11-dev \
+    libmysqlclient-dev \
+    libpq-dev \
+    libsctp1 \
+    libsctp-dev \
+    libxml2-dev \
+    mercurial \
+    python-dev \
+    ssl-cert \
       swig"
   elif [[ "$OS_BASEDISTRO" == "fedora" ]]; then
     PACKAGE_LIST="\
@@ -514,6 +410,7 @@ install_freediameter_from_source() {
     #tar xzf 1.2.0.tar.gz
     cd freediameter
     #patch -p1 < $OPENAIRCN_DIR/src/s6a/freediameter/freediameter-1.2.0.patch
+    git apply ~/opencells-mods/freediameter1.2.0.postOAI.patch
     mkdir build
     cd build
     $CMAKE -DCMAKE_INSTALL_PREFIX:PATH=/usr/local ../
@@ -676,8 +573,8 @@ check_install_hss_software() {
   # Libraries
   if [[ $OS_DISTRO == "ubuntu" ]]; then
     PACKAGE_LIST="\
-      libconfig8-dev \
-      libgcrypt11-dev \
+      libconfig-dev \
+      libgcrypt-dev \
       libidn2-0-dev \
       libidn11-dev \
       libmysqlclient-dev \
@@ -715,44 +612,9 @@ check_install_hss_software() {
     $SUDO systemctl start mariadb
   fi
 
-  if [[ $OS_DISTRO == 'ubuntu' ]]; then
-    #Remove old gnutls/nettle installation that was done from sources
-    remove_nettle_from_source
-    $SUDO $INSTALLER install -y nettle-dev nettle-bin
-  fi
 
   install_freediameter_from_source $1
     
-  case "$(get_distribution_release)" in
-    "ubuntu14.04")
-      PACKAGE_LIST="\
-        php5 \
-        phpmyadmin \
-        python-pexpect \
-        libapache2-mod-php*"
-      ;;
-    "ubuntu16.04")
-      PACKAGE_LIST="\
-        php \
-        phpmyadmin \
-        python-pexpect \
-        libapache2-mod-php*"
-      ;;
-    "rhel7" | "centos7")
-      PACKAGE_LIST="\
-        phpmyadmin \
-        pexpect"
-      ;;
-    "fedora")
-      PACKAGE_LIST="\
-        phpmyadmin \
-        python2-pexpect"
-      ;;
-    *)
-      echo_fatal "$OS_DISTRO is not a supported distribution."
-      ;;
-  esac
-  $SUDO $INSTALLER install $OPTION $PACKAGE_LIST 
 }
 
 #-------------------------------------------------------------------------------
@@ -782,7 +644,7 @@ check_install_mme_software() {
       doxygen \
       doxygen-gui \
       flex \
-      gccxml \
+    castxml \
       gdb \
       git \
       pkg-config \
@@ -811,8 +673,8 @@ check_install_mme_software() {
   if [[ $OS_DISTRO == "ubuntu" ]]; then
     PACKAGE_LIST="\
       guile-2.0-dev \
-      libconfig8-dev \
-      libgcrypt11-dev \
+      libconfig-dev \
+    libgcrypt11-dev \
       libgmp-dev \
       libhogweed? \
       libgtk-3-dev \
@@ -828,7 +690,9 @@ check_install_mme_software() {
       mscgen \
       openssl \
       check \
-      python"
+      nettle-dev \
+      gnutls-dev \
+    python"
   elif [[ "$OS_BASEDISTRO" == "fedora" ]]; then
     PACKAGE_LIST="\
       guile-devel \
@@ -858,14 +722,6 @@ check_install_mme_software() {
   if [ $? -ne 0 ]; then
     echo_fatal "Failed to install package list $PACKAGE_LIST"
   fi
-
-  if [[ $OS_DISTRO == 'ubuntu' ]]; then
-    #Remove old gnutls/nettle installation that was done from sources
-    remove_nettle_from_source
-    remove_gnutls_from_source
-    $SUDO apt-get install -y nettle-dev nettle-bin
-    $SUDO apt-get install -y libgnutls-dev
-  fi
   
   install_freediameter_from_source $1
   install_asn1c_from_source $1
@@ -876,7 +732,7 @@ check_install_mme_software() {
   if [[ $OS_DISTRO == "ubuntu" ]]; then
     PACKAGE_LIST="\
       ethtool \
-      iproute \
+    iproute2 \
       vlan \
       tshark"
   elif [[ "$OS_BASEDISTRO" == "fedora" ]]; then
@@ -953,7 +809,7 @@ check_install_spgw_software() {
       doxygen \
       doxygen-gui \
       flex \
-      gccxml \
+      castxml \
       gdb \
       git \
       pkg-config \
@@ -983,8 +839,8 @@ check_install_spgw_software() {
   if [[ $OS_DISTRO == "ubuntu" ]]; then
     PACKAGE_LIST="\
       guile-2.0-dev \
-      libconfig8-dev \
-      libgcrypt11-dev \
+      libconfig-dev \
+    libgcrypt11-dev \
       libgmp-dev \
       libhogweed? \
       libgtk-3-dev \
@@ -1029,7 +885,7 @@ check_install_spgw_software() {
     PACKAGE_LIST="\
       ethtool \
       iperf \
-      iproute \
+    iproute2 \
       vlan \
       tshark"
   elif [[ "$OS_BASEDISTRO" == "fedora" ]]; then
@@ -1116,7 +972,7 @@ install_asn1c_from_source(){
     mkdir -p /tmp/asn1c
     git clone https://gitlab.eurecom.fr/oai/asn1c.git /tmp/asn1c
     cd /tmp/asn1c
-    ./configure
+    ./configure --prefix="$OPENAIRCN_DIR"/build
     make > /tmp/log_compile_asn1c 2>&1
     $SUDO make install
   fi

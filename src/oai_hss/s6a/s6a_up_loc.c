@@ -185,9 +185,9 @@ s6a_up_loc_cb (
       /*
        * We don't handle cases where we have to inform SGSN
        */
-      result_code = ER_DIAMETER_INVALID_AVP_VALUE;
+      //result_code = ER_DIAMETER_INVALID_AVP_VALUE;
       FPRINTF_ERROR ( "ULR single registration bit set (SGSN to MME): " "not handled by standalone E-UTRAN HSS\n");
-      goto out;
+      //goto out;
     }
 
     if (!FLAG_IS_SET (ulr_flags, ULR_S6A_S6D_INDICATOR)) {

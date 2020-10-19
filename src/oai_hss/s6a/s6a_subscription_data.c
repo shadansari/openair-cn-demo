@@ -213,8 +213,11 @@ s6a_add_subscription_data_avp (
        * Service-Selection
        */
       CHECK_FCT (fd_msg_avp_new (s6a_cnf.dataobj_s6a_service_selection, 0, &child_avp));
-      value.os.data = (uint8_t *) pdn_elm->apn;
-      value.os.len = strlen (pdn_elm->apn);
+      uint8_t data[256]={0};
+      data[0]=strlen(pdn_elm->apn);
+      strncpy(data+1,pdn_elm->apn, 250);
+      value.os.data = data;
+      value.os.len = strlen (pdn_elm->apn) + 1;
       CHECK_FCT (fd_msg_avp_setvalue (child_avp, &value));
       CHECK_FCT (fd_msg_avp_add (apn_configuration, MSG_BRW_LAST_CHILD, child_avp));
       /*
